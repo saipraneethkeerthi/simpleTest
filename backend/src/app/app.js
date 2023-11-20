@@ -1,7 +1,12 @@
 //Importing Express and Mongoose
 const express = require('express')
 
+const { createServer } = require('node:http');
+const { join } = require('node:path');
+const { Server } = require('socket.io');
+
 const serviceRoutes = require('../apiRoutes/serviceRoutes')
+const socketRoutes = require('../apiRoutes/socketRouter')
 
 //Assiging Express to varaible app
 const app = express();
@@ -13,16 +18,28 @@ app.use(express.json())
 
 //Assigning port number to port varaible
 const port = process.env.PORT || 1109
+const server = createServer(app);
+const io = new Server(server);
+const httpServer = createServer();
+
 
 const cors = require('cors')
 app.use(cors())
-app.use("/api", serviceRoutes)
 
 
+
+io.on('connection', (socket) => {
+	socket.on('chat message', (msg) => {
+	  console.log('message: ' + msg);
+	});
+  });
+
+  app.use("/api", serviceRoutes)
+app.use("/socket", socketRoutes)
 
 app.use(express.urlencoded({ extended: true }))
 
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
 	console.log(`app listening http://localhost:${port}`)
 })
